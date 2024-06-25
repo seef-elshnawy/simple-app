@@ -1,0 +1,65 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  id: Float!
+  firstName: String!
+  lastName: String!
+  email: String!
+  userName: String!
+  refreshToken: String
+}
+
+type Token {
+  accessToken: String!
+  refreshToken: String!
+}
+
+type Query {
+  findAll: [User!]!
+  findOne(input: FindUserInput!): User!
+}
+
+input FindUserInput {
+  id: String!
+}
+
+type Mutation {
+  signUp(createAuthInput: CreateUserInput!): Token!
+  signInWithEmail(signInWithEmailInput: signInWithEmailInput!): Token!
+  signInWithUsername(signInWithUsernameInput: signInWithUserNameInput!): Token!
+  signOut: String!
+  updateUser(updateUserInput: UpdateUserInput!): String!
+  removeUser(id: Int!): String!
+}
+
+input CreateUserInput {
+  userName: String
+  firstName: String
+  lastName: String
+  email: String
+  password: String
+  refreshToken: String
+}
+
+input signInWithEmailInput {
+  email: String!
+  password: String!
+}
+
+input signInWithUserNameInput {
+  userName: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  userName: String
+  firstName: String
+  lastName: String
+  email: String
+  password: String
+  refreshToken: String
+  id: Int!
+  lang: String
+}
