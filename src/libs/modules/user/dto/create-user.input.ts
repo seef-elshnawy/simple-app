@@ -1,5 +1,6 @@
 import { InputType, Int, Field } from '@nestjs/graphql';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { languagesEnum } from '@src/libs/Application/lang/lang.enum';
+import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
 @InputType()
 export class CreateUserInput {
@@ -30,4 +31,9 @@ export class CreateUserInput {
 
   @Field({ nullable: true })
   refreshToken: string;
+  
+  @IsEnum(languagesEnum)
+  @Field(() => languagesEnum, {nullable:true})
+  lang?: languagesEnum;
+
 }

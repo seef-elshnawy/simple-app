@@ -4,3 +4,5 @@ export enum UserVerificationCodeUseCaseEnum {
   EMAIL_UPDATE = 'EMAIL_UPDATE',
   SOCIAL_EMAIL_VERIFICATION = 'SOCIAL_EMAIL_VERIFICATION',
 }
+
+

@@ -1,7 +1,10 @@
+import { registerEnumType } from '@nestjs/graphql';
 
-enum languagesEnum{
-    AR="Arabic",
-    EN="English",
-    FR="French",
-    DU="Dutch"
+export enum languagesEnum {
+  AR = 'Arabic',
+  EN = 'English',
+  FR = 'French',
+  DU = 'Dutch',
 }
+
+registerEnumType(languagesEnum, { name: 'languagesEnum' });

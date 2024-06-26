@@ -5,6 +5,13 @@ import { UpdateUserInput } from './dto/update-user.input';
 import { UseGuards } from '@nestjs/common';
 import { FindUserInput } from './dto/find-unique-user.input';
 import { AuthGuard } from '@src/libs/Application/guards/auth.guard';
+import { UserTranslation } from './entities/translationUser.entity';
+import { CurrentUser } from '../auth/decorator/user.decorator';
+import { languagesEnum } from '@src/libs/Application/lang/lang.enum';
+import {
+  UserTranslationInput,
+  changeLanguageInput,
+} from './dto/create-user-translation.dto';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -15,8 +22,11 @@ export class UserResolver {
   }
   @UseGuards(AuthGuard)
   @Query(() => User)
-  findOne(@Args('input') input: FindUserInput): Promise<User> {
-    return this.userService.findOneAccount(+input.id);
+  async findOne(
+    @Args('input') input: FindUserInput,
+    @CurrentUser('lang') lang: languagesEnum,
+  ): Promise<User> {
+    return await this.userService.findOneAccount(+input.id, lang);
   }
 
   @Mutation(() => String)
@@ -27,8 +37,30 @@ export class UserResolver {
     );
   }
 
+  @Mutation(() => UserTranslation)
+  async translateUserFields(
+    @CurrentUser() user: User,
+    @CurrentUser('lang') lang: languagesEnum,
+    @Args('fields') userTranslationInput: UserTranslationInput,
+  ) {
+    return await this.userService.translateUserFields(
+      user,
+      userTranslationInput,
+      lang,
+    );
+  }
+
   @Mutation(() => String)
   removeUser(@Args('id', { type: () => Int }) id: number) {
     return this.userService.removeAccount(id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => User)
+  changeUserLang(
+    @CurrentUser() user: User,
+    @Args('input') input: changeLanguageInput,
+  ) {
+    return this.userService.changeUserLang(user, input);
   }
 }

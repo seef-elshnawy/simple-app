@@ -36,7 +36,8 @@ export class ContextService implements IContextInterface {
         where: { sessionCode },
       });
       // if access is valid we will check if had valid session
-      if (!checkIfSessionIsExist) return null;
+      if (!checkIfSessionIsExist || checkIfSessionIsExist.length === 0)
+        return null;
       const user = await this.userRepo.findOne({
         where: { id },
       });
@@ -87,7 +88,10 @@ export class ContextService implements IContextInterface {
     });
     if (!user) return null;
     // generate new access token
-    const token = await this.updateToken(user.refreshToken, user);
+    const token = await this.authService.updateAccessToken(
+      user.id,
+      user.refreshToken,
+    );
     if (!token) return null;
     // get session code from access token
     let codeFromAccessToken = this.jwt.verify(token, {
@@ -96,8 +100,8 @@ export class ContextService implements IContextInterface {
     const checkIfSessionIsExist = await this.sessionRepo.find({
       where: { sessionCode: codeFromAccessToken },
     });
-    if (!checkIfSessionIsExist) return null;
-    console.log(user);
+    if (!checkIfSessionIsExist || checkIfSessionIsExist.length === 0)
+      return null;
     return user;
   }
 }

@@ -11,6 +11,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Sessions } from './entities/auth.entity';
+import { UserTranslation } from '../user/entities/translationUser.entity';
+import { UserTranslationInput } from '../user/dto/create-user-translation.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +24,8 @@ export class AuthService {
     private sessionsRepo: Repository<Sessions>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    @InjectRepository(UserTranslation)
+    private userTranslation: Repository<UserTranslation>,
   ) {}
   async signUp(createUserInput: CreateUserInput) {
     try {
@@ -38,6 +42,12 @@ export class AuthService {
         refreshToken: token.refreshToken,
         sessionCode: code,
       });
+       await this.userTranslation.save({
+        base: account,
+        firstName: createUserInput.firstName,
+        lastName: createUserInput.lastName,
+        LanguageCode: account.lang
+      })
       return token;
     } catch (err) {
       throw err;
@@ -71,7 +81,24 @@ export class AuthService {
       refreshToken,
     };
   }
-
+  async updateAccessToken(id: number, refreshToken: string) {
+    const sessionCode = this.jwtService.verify(refreshToken, {
+      secret: this.configService.get('JWT_REFRESH_SECRET'),
+    }).sessionCode;
+    const [accessToken] = await Promise.all([
+      this.jwtService.signAsync(
+        {
+          id,
+          sessionCode,
+        },
+        {
+          secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+          expiresIn: '15m',
+        },
+      ),
+    ]);
+    return accessToken;
+  }
   async signInWithEmail(signWithEmail: signInWithEmailInput) {
     const account = await this.userRepo.findOne({
       where: { email: signWithEmail.email },
@@ -84,10 +111,20 @@ export class AuthService {
     if (!validatePassword) throw new ForbiddenException('invalid credentials');
     const code = this.helper.generateSessionCode();
     const token = await this.getToken(account.id, code);
-    await this.sessionsRepo.create({
+    await this.sessionsRepo.save({
       refreshToken: token.refreshToken,
       sessionCode: code,
     });
+    // here we have a security gab wich is the old session doesn't deleted when user sign in to had new session wich can used by attackers
+    // and take more space in database
+    ///////////////
+    const oldSessionCode = await this.jwtService.verify(account.refreshToken, {
+      secret: this.configService.get('JWT_REFRESH_SECRET'),
+    }).sessionCode;
+    await this.sessionsRepo.delete({ sessionCode: oldSessionCode });
+    ///////////////
+    account.refreshToken = token.refreshToken;
+    await this.userRepo.save(account);
     return token;
   }
 
@@ -103,10 +140,20 @@ export class AuthService {
     if (!validatePassword) throw new ForbiddenException('invalid credentials');
     const code = this.helper.generateSessionCode();
     const token = await this.getToken(account.id, code);
-    await this.sessionsRepo.create({
+    await this.sessionsRepo.save({
       refreshToken: token.refreshToken,
       sessionCode: code,
     });
+    // here we have a security gab wich is the old session doesn't deleted when user sign in to had new session wich can used by attackers
+    // and take more space in database
+    ///////////////
+    const oldSessionCode = await this.jwtService.verify(account.refreshToken, {
+      secret: this.configService.get('JWT_REFRESH_SECRET'),
+    }).sessionCode;
+    await this.sessionsRepo.delete({ sessionCode: oldSessionCode });
+    ///////////////
+    account.refreshToken = token.refreshToken;
+    await this.userRepo.save(account);
     return token;
   }
 
@@ -114,7 +161,7 @@ export class AuthService {
     const user = await this.userRepo.findOne({
       where: { id },
     });
-    if(!user) throw new ForbiddenException('account not found')
+    if (!user) throw new ForbiddenException('account not found');
     const { refreshToken } = user;
     const { sessionCode } = this.jwtService.verify(refreshToken, {
       secret: this.configService.get('JWT_REFRESH_SECRET'),

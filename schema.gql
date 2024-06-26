@@ -2,13 +2,19 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type UserTranslation {
+  LanguageCode: String!
+  firstName: String!
+  lastName: String!
+}
+
 type User {
-  id: Float!
   firstName: String!
   lastName: String!
   email: String!
   userName: String!
   refreshToken: String
+  lang: String!
 }
 
 type Token {
@@ -31,7 +37,9 @@ type Mutation {
   signInWithUsername(signInWithUsernameInput: signInWithUserNameInput!): Token!
   signOut: String!
   updateUser(updateUserInput: UpdateUserInput!): String!
+  translateUserFields(fields: UserTranslationInput!): UserTranslation!
   removeUser(id: Int!): String!
+  changeUserLang(input: changeLanguageInput!): User!
 }
 
 input CreateUserInput {
@@ -41,6 +49,14 @@ input CreateUserInput {
   email: String
   password: String
   refreshToken: String
+  lang: languagesEnum
+}
+
+enum languagesEnum {
+  AR
+  EN
+  FR
+  DU
 }
 
 input signInWithEmailInput {
@@ -60,6 +76,15 @@ input UpdateUserInput {
   email: String
   password: String
   refreshToken: String
+  lang: languagesEnum
   id: Int!
-  lang: String
+}
+
+input UserTranslationInput {
+  firstName: String!
+  lastName: String!
+}
+
+input changeLanguageInput {
+  lang: languagesEnum!
 }

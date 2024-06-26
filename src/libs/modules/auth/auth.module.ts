@@ -10,10 +10,11 @@ import { HelperService } from '@src/libs/utils/helper/helper.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { Sessions } from './entities/auth.entity';
+import { UserTranslation } from '../user/entities/translationUser.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Sessions, User]),
+    TypeOrmModule.forFeature([Sessions, User, UserTranslation]),
     JwtModule.register({}),
     UserModule,
     HelperModule,

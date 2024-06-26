@@ -1,6 +1,7 @@
 import { CreateUserInput } from './create-user.input';
 import { InputType, Field, Int, PartialType } from '@nestjs/graphql';
-import { IsEmail, IsEmpty, IsNotEmpty, IsString } from 'class-validator';
+import { languagesEnum } from '@src/libs/Application/lang/lang.enum';
+import { IsEmail, IsEmpty, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
 @InputType()
 export class UpdateUserInput extends PartialType(CreateUserInput) {
@@ -22,7 +23,8 @@ export class UpdateUserInput extends PartialType(CreateUserInput) {
   @Field({ nullable: true })
   lastName: string;
 
-  @Field({ nullable: true })
+  @IsEnum(languagesEnum)
+  @Field(() => languagesEnum, {nullable:true})
   lang?: languagesEnum;
 
   @Field({ nullable: true })

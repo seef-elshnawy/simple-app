@@ -1,18 +1,33 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  Index,
+  OneToMany,
+  PrimaryColumn,
+} from 'typeorm';
+import { UserTranslation } from './translationUser.entity';
+import { languagesEnum } from '@src/libs/Application/lang/lang.enum';
 
 @Entity()
 @ObjectType()
 export class User {
-  @Field()
   @PrimaryGeneratedColumn()
   id: number;
+
+  @OneToMany((type) => UserTranslation, (translations) => translations.base, {
+    eager: true,
+  })
+  translations: UserTranslation[];
+
+
   @Field()
-  @Column()
   firstName: string;
+
   @Field()
-  @Column()
   lastName: string;
+  
   @Field()
   @Column({ unique: true })
   email: string;
@@ -27,4 +42,8 @@ export class User {
   @Field({ nullable: true })
   @Column({ nullable: true })
   refreshToken: string;
+
+  @Field()
+  @Column({ default: languagesEnum.EN })
+  lang: languagesEnum;
 }
