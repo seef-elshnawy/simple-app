@@ -10,6 +10,7 @@ import {
 import { UserTranslation } from './translationUser.entity';
 import { languagesEnum } from '@src/libs/Application/lang/lang.enum';
 import { Sessions } from '../../auth/entities/auth.entity';
+import { Product } from '../../product/entities/product.entity';
 
 @Entity()
 @ObjectType()
@@ -45,4 +46,7 @@ export class User {
 
   @OneToMany((type) => Sessions, (session) => session.user)
   session: Sessions[];
+
+  @OneToMany(type=> Product, (product)=> product.user)
+  product: Product[]
 }

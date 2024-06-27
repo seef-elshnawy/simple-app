@@ -10,6 +10,7 @@ import { AuthModule } from './libs/modules/auth/auth.module';
 import { UserModule } from './libs/modules/user/user.module';
 import { ContextModule } from './libs/Application/context/context.module';
 import { ConfigModule } from '@nestjs/config';
+import { ProductModule } from './libs/modules/product/product.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ConfigModule } from '@nestjs/config';
     }),
     AuthModule,
     UserModule,
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [AppService],

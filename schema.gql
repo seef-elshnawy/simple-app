@@ -8,6 +8,14 @@ type UserTranslation {
   lastName: String!
 }
 
+type Product {
+  ProductName: String!
+  description: String!
+  instructions: String!
+  price: Float!
+  amount: Float!
+}
+
 type User {
   firstName: String!
   lastName: String!
@@ -24,6 +32,7 @@ type Token {
 type Query {
   findAll: [User!]!
   findOne(input: FindUserInput!): User!
+  product(id: Int!): Product!
 }
 
 input FindUserInput {
@@ -39,6 +48,9 @@ type Mutation {
   translateUserFields(fields: UserTranslationInput!): UserTranslation!
   removeUser(id: Int!): String!
   changeUserLang(input: changeLanguageInput!): User!
+  createProduct(createProductInput: CreateProductInput!): Product!
+  updateProduct(updateProductInput: UpdateProductInput!): Product!
+  removeProduct(id: Int!): Product!
 }
 
 input CreateUserInput {
@@ -86,4 +98,15 @@ input UserTranslationInput {
 
 input changeLanguageInput {
   lang: languagesEnum!
+}
+
+input CreateProductInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdateProductInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
 }
