@@ -22,7 +22,7 @@ export class UserTranslation {
 
   @Index()
   @ManyToOne((type) => User, (base) => base.translations, {
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   base: User;
 

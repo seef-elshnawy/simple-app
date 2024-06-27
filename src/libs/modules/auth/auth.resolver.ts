@@ -9,6 +9,7 @@ import {
 import { CurrentUser } from './decorator/user.decorator';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@src/libs/Application/guards/auth.guard';
+import { User } from '../user/entities/user.entity';
 
 @Resolver()
 export class AuthResolver {
@@ -33,10 +34,10 @@ export class AuthResolver {
   ) {
     return await this.authService.signInWithUsername(signWithUsernameInput);
   }
-  
+
   @UseGuards(AuthGuard)
   @Mutation(() => String)
-  async signOut(@CurrentUser('id') id: string) {
-    return await this.authService.signOutFromUserAccount(+id);
+  async signOut(@CurrentUser() user: User) {
+    return await this.authService.signOutFromUserAccount(user);
   }
 }

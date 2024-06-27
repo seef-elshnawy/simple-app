@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { UserTranslation } from './translationUser.entity';
 import { languagesEnum } from '@src/libs/Application/lang/lang.enum';
+import { Sessions } from '../../auth/entities/auth.entity';
 
 @Entity()
 @ObjectType()
@@ -21,16 +22,16 @@ export class User {
   })
   translations: UserTranslation[];
 
-
   @Field()
   firstName: string;
 
   @Field()
   lastName: string;
-  
+
   @Field()
   @Column({ unique: true })
   email: string;
+
   @Column()
   password: string;
 
@@ -38,12 +39,10 @@ export class User {
   @Column({ unique: true })
   userName: string;
 
-  @Index()
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  refreshToken: string;
-
   @Field()
   @Column({ default: languagesEnum.EN })
   lang: languagesEnum;
+
+  @OneToMany((type) => Sessions, (session) => session.user)
+  session: Sessions[];
 }

@@ -2,24 +2,32 @@ import { ObjectType, Field, Int } from '@nestjs/graphql';
 import {
   Column,
   Entity,
-  Generated,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { User } from '../../user/entities/user.entity';
 
 @ObjectType()
 @Entity()
 export class Sessions {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn()
   @Field()
-  sessionId: string;
+  sessionId: number;
 
   @Column()
+  @Index()
   @Field()
   sessionCode: string;
 
-  @Index()
+  @ManyToOne(() => User, (user) => user.session, {
+    onDelete: 'CASCADE',
+    eager: true,
+  })
+  user: User;
+
   @Column()
-  @Field()
-  refreshToken: string;
+  @JoinColumn()
+  userId: number;
 }

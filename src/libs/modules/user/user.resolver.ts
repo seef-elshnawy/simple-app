@@ -12,13 +12,16 @@ import {
   UserTranslationInput,
   changeLanguageInput,
 } from './dto/create-user-translation.dto';
+import { log } from 'console';
 
 @Resolver(() => User)
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
+  
+  @UseGuards(AuthGuard)
   @Query(() => [User])
   async findAll() {
-    return await this.userService.findAllAccounts();
+    return await this.userService.findAllUsers();
   }
   @UseGuards(AuthGuard)
   @Query(() => User)
@@ -26,12 +29,12 @@ export class UserResolver {
     @Args('input') input: FindUserInput,
     @CurrentUser('lang') lang: languagesEnum,
   ): Promise<User> {
-    return await this.userService.findOneAccount(+input.id, lang);
+    return await this.userService.findOneUser(+input.id, lang);
   }
 
   @Mutation(() => String)
   async updateUser(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
-    return await this.userService.updateAccount(
+    return await this.userService.updateUser(
       updateUserInput.id,
       updateUserInput,
     );
@@ -52,7 +55,7 @@ export class UserResolver {
 
   @Mutation(() => String)
   removeUser(@Args('id', { type: () => Int }) id: number) {
-    return this.userService.removeAccount(id);
+    return this.userService.removeUser(id);
   }
 
   @UseGuards(AuthGuard)

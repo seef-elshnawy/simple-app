@@ -19,44 +19,45 @@ export class UserService {
     private userTranslation: Repository<UserTranslation>,
   ) {}
 
-  findAllAccounts(): Promise<User[]> {
+  findAllUsers(): Promise<User[]> {
     return this.userRepo.find();
   }
 
-  async findOneAccount(id: number, lang: languagesEnum): Promise<User> {
+  async findOneUser(id: number, lang: languagesEnum): Promise<User> {
     const user = await this.userRepo.findOne({
       where: { id },
       loadEagerRelations: true,
     });
-    let filterAccount = user.translations.filter(
+    if (!user) throw new ForbiddenException('user not found');
+    let filteruser = user.translations.filter(
       (l) => l.LanguageCode === lang,
     );
-    if (!filterAccount || filterAccount.length === 0)
-      filterAccount = user.translations.filter(
+    if (!filteruser || filteruser.length === 0)
+      filteruser = user.translations.filter(
         (l) => l.LanguageCode === languagesEnum.EN,
       );
-    const fullAccountIncludedName = Object.assign(user, filterAccount[0]);
-    // console.log(fullAccountIncludedName)
-    if (!user) throw new ForbiddenException('account not found');
+    const fulluserIncludedName = Object.assign(user, filteruser[0]);
+    // console.log(fulluserIncludedName)
+    if (!user) throw new ForbiddenException('user not found');
     return user;
   }
 
-  async updateAccount(id: number, updateUserInput: UpdateUserInput) {
+  async updateUser(id: number, updateUserInput: UpdateUserInput) {
     try {
       const user = await this.userRepo.findOne({ where: { id } });
-      if (!user) throw new ForbiddenException('account not found');
-      await this.userRepo.update(user, updateUserInput);
+      if (!user) throw new ForbiddenException('user not found');
+      await this.userRepo.update(user.id, updateUserInput);
     } catch (err) {
       throw err;
     }
-    return 'account updated successfull';
+    return 'user updated successfull';
   }
 
-  async removeAccount(id: number) {
+  async removeUser(id: number) {
     try {
       const user = await this.userRepo.findOne({ where: { id } });
-      if (!user) throw new ForbiddenException('account not found');
-      await this.userRepo.delete(user);
+      if (!user) throw new ForbiddenException('user not found');
+      await this.userRepo.delete(id);
       return 'user deleted successfull';
     } catch (err) {
       throw err;
@@ -71,7 +72,6 @@ export class UserService {
     const translationsThatUserHave = await this.userTranslation.findOne({
       where: { base: user, LanguageCode: lang },
     });
-    console.log(translationsThatUserHave);
     if (translationsThatUserHave) {
       translationsThatUserHave.firstName = userTranslationInput.firstName;
       translationsThatUserHave.lastName = userTranslationInput.lastName;

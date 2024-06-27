@@ -12,7 +12,6 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Sessions } from './entities/auth.entity';
 import { UserTranslation } from '../user/entities/translationUser.entity';
-import { UserTranslationInput } from '../user/dto/create-user-translation.dto';
 
 @Injectable()
 export class AuthService {
@@ -29,31 +28,47 @@ export class AuthService {
   ) {}
   async signUp(createUserInput: CreateUserInput) {
     try {
-      const hash = await this.helper.hashPassword(createUserInput.password);
-      const account = await this.userRepo.save({
+      await this.checkOfUserNameAndEmailAreUnique(
+        createUserInput.email,
+        createUserInput.userName,
+      );
+      const hashPassword = await this.helper.hashPassword(
+        createUserInput.password,
+      );
+      const user = await this.userRepo.save({
         ...createUserInput,
-        password: hash,
+        password: hashPassword,
       });
       const code = this.helper.generateSessionCode();
-      const token = await this.getToken(account.id, code);
-      account.refreshToken = token.refreshToken;
-      await this.userRepo.save(account);
-      await this.sessionsRepo.save({
-        refreshToken: token.refreshToken,
-        sessionCode: code,
-      });
-       await this.userTranslation.save({
-        base: account,
+      const token = await this.createToken(user.id, code);
+
+      await this.userTranslation.save({
+        base: user,
         firstName: createUserInput.firstName,
         lastName: createUserInput.lastName,
-        LanguageCode: account.lang
-      })
+        LanguageCode: user.lang,
+      });
+
       return token;
     } catch (err) {
       throw err;
     }
   }
-  async getToken(id: number, sessionCode: string) {
+
+  async checkOfUserNameAndEmailAreUnique(email: string, userName: string) {
+    const checkOfEmailIsUnique = await this.userRepo.findOne({
+      where: { email },
+    });
+    if (checkOfEmailIsUnique)
+      throw new ForbiddenException('email is used before');
+    const checkOfUserNameIsUnique = await this.userRepo.findOne({
+      where: { userName },
+    });
+    if (checkOfUserNameIsUnique)
+      throw new ForbiddenException('userName is used before');
+  }
+
+  async createToken(id: number, sessionCode: string) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
@@ -76,102 +91,92 @@ export class AuthService {
         },
       ),
     ]);
+    console.log(sessionCode);
+
+    await this.sessionsRepo.save({
+      userId: id,
+      sessionCode,
+    });
     return {
       accessToken,
       refreshToken,
     };
   }
-  async updateAccessToken(id: number, refreshToken: string) {
-    const sessionCode = this.jwtService.verify(refreshToken, {
+  async updateToken(token: string) {
+    console.log('run from updateToken');
+    const { id, sessionCode } = this.jwtService.verify(token, {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
-    }).sessionCode;
-    const [accessToken] = await Promise.all([
+    });
+    const NewSessionCode = this.helper.generateSessionCode();
+    console.log(NewSessionCode, 'NewSessionCode')
+    const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
           id,
-          sessionCode,
+          NewSessionCode,
         },
         {
           secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
           expiresIn: '15m',
         },
       ),
+      this.jwtService.signAsync(
+        {
+          id,
+          NewSessionCode,
+        },
+        {
+          secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+          expiresIn: '7d',
+        },
+      ),
     ]);
-    return accessToken;
+    const session = await this.sessionsRepo.findOne({ where: { sessionCode } });
+    if (!session) throw new ForbiddenException('UnAuthorized');
+    session.sessionCode = NewSessionCode;
+    await this.sessionsRepo.save(session);
+    return {
+      accessToken,
+      newRefreshToken: refreshToken,
+      id,
+      sessionCode: NewSessionCode,
+    };
   }
   async signInWithEmail(signWithEmail: signInWithEmailInput) {
-    const account = await this.userRepo.findOne({
+    const user = await this.userRepo.findOne({
       where: { email: signWithEmail.email },
+      loadEagerRelations: true,
     });
-    if (!account) throw new ForbiddenException('invalid credentials');
+    if (!user) throw new ForbiddenException('invalid credentials');
     const validatePassword = await this.helper.comparePassword(
-      account.password,
+      user.password,
       signWithEmail.password,
     );
     if (!validatePassword) throw new ForbiddenException('invalid credentials');
     const code = this.helper.generateSessionCode();
-    const token = await this.getToken(account.id, code);
-    await this.sessionsRepo.save({
-      refreshToken: token.refreshToken,
-      sessionCode: code,
-    });
-    // here we have a security gab wich is the old session doesn't deleted when user sign in to had new session wich can used by attackers
-    // and take more space in database
-    ///////////////
-    const oldSessionCode = await this.jwtService.verify(account.refreshToken, {
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
-    }).sessionCode;
-    await this.sessionsRepo.delete({ sessionCode: oldSessionCode });
-    ///////////////
-    account.refreshToken = token.refreshToken;
-    await this.userRepo.save(account);
+    const token = await this.createToken(user.id, code);
     return token;
   }
 
   async signInWithUsername(signWithUsername: signInWithUserNameInput) {
-    const account = await this.userRepo.findOne({
+    const user = await this.userRepo.findOne({
       where: { userName: signWithUsername.userName },
+      loadEagerRelations: true,
     });
-    if (!account) throw new ForbiddenException('invalid credentials');
+    if (!user) throw new ForbiddenException('invalid credentials');
     const validatePassword = await this.helper.comparePassword(
-      account.password,
+      user.password,
       signWithUsername.password,
     );
     if (!validatePassword) throw new ForbiddenException('invalid credentials');
     const code = this.helper.generateSessionCode();
-    const token = await this.getToken(account.id, code);
-    await this.sessionsRepo.save({
-      refreshToken: token.refreshToken,
-      sessionCode: code,
-    });
-    // here we have a security gab wich is the old session doesn't deleted when user sign in to had new session wich can used by attackers
-    // and take more space in database
-    ///////////////
-    const oldSessionCode = await this.jwtService.verify(account.refreshToken, {
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
-    }).sessionCode;
-    await this.sessionsRepo.delete({ sessionCode: oldSessionCode });
-    ///////////////
-    account.refreshToken = token.refreshToken;
-    await this.userRepo.save(account);
+    const token = await this.createToken(user.id, code);
     return token;
   }
 
-  async signOutFromUserAccount(id: number) {
-    const user = await this.userRepo.findOne({
-      where: { id },
-    });
+  async signOutFromUserAccount(user: User) {
     if (!user) throw new ForbiddenException('account not found');
-    const { refreshToken } = user;
-    const { sessionCode } = this.jwtService.verify(refreshToken, {
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
-    });
-    const session = await this.sessionsRepo.findOne({
-      where: { sessionCode },
-    });
-    user.refreshToken = null;
-    await this.sessionsRepo.delete(session);
-    await this.userRepo.save(user);
+    await this.sessionsRepo.delete({ userId: user.id });
     return 'logout successfull';
   }
 }
