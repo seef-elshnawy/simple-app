@@ -47,6 +47,6 @@ export class User {
   @OneToMany((type) => Sessions, (session) => session.user)
   session: Sessions[];
 
-  @OneToMany(type=> Product, (product)=> product.user)
-  product: Product[]
+  @OneToMany((type) => Product, (product) => product.user)
+  product: Product[];
 }

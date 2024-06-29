@@ -23,7 +23,8 @@ export class Sessions {
 
   @ManyToOne(() => User, (user) => user.session, {
     onDelete: 'CASCADE',
-    eager: true,
+    onUpdate: "CASCADE",
+    eager: true
   })
   user: User;
 

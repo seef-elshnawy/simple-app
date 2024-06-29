@@ -1,35 +1,56 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int, ResolveField, Parent, Context } from '@nestjs/graphql';
 import { ProductService } from './product.service';
 import { Product } from './entities/product.entity';
 import { CreateProductInput } from './dto/create-product.input';
-import { UpdateProductInput } from './dto/update-product.input';
+import { UpdateProductInput, UpdateProductTranslation } from './dto/update-product.input';
+import { CurrentUser } from '../auth/decorator/user.decorator';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@src/libs/Application/guards/auth.guard';
+import { languagesEnum } from '@src/libs/Application/lang/lang.enum';
+import { ProductTranslation } from './entities/translationProduct.entity';
 
 @Resolver(() => Product)
 export class ProductResolver {
   constructor(private readonly productService: ProductService) {}
-
+  
+  @UseGuards(AuthGuard)
   @Mutation(() => Product)
-  createProduct(@Args('createProductInput') createProductInput: CreateProductInput) {
-    return this.productService.create(createProductInput);
+  createProduct(@Args('createProductInput') createProductInput: CreateProductInput, 
+  @CurrentUser('id') userId:number) {
+    return this.productService.CreateProduct(createProductInput, userId);
+  }
+  
+  @UseGuards(AuthGuard)
+  @Query(() => [Product])
+  findAllProducts(@CurrentUser('lang') lang:languagesEnum) {
+    return this.productService.findAllProducts();
   }
 
-  @Query(() => [Product], { name: 'product' })
-  findAll() {
-    return this.productService.findAll();
+  @UseGuards(AuthGuard)
+  @Query(() => Product, {nullable: true})
+  findOneProduct(@Args('id', { type: () => Int }) id: number) {
+    return this.productService.findOneProduct(id);
   }
 
-  @Query(() => Product, { name: 'product' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.productService.findOne(id);
+  @UseGuards(AuthGuard)
+  @Mutation(() => String)
+  updateProduct(@Args('updateProductInput') updateProductInput: UpdateProductInput, 
+  @Args('updateProductTranslationInput') updateProductTranslation: UpdateProductTranslation
+  ) {
+    return this.productService.updateProduct(updateProductInput.Id, updateProductInput, updateProductTranslation);
   }
-
-  @Mutation(() => Product)
-  updateProduct(@Args('updateProductInput') updateProductInput: UpdateProductInput) {
-    return this.productService.update(updateProductInput.id, updateProductInput);
+  
+  @UseGuards(AuthGuard)
+  @Mutation(() => String)
+  removeProduct(@Args('id') id: number) {
+    return this.productService.removeProduct(id);
   }
-
-  @Mutation(() => Product)
-  removeProduct(@Args('id', { type: () => Int }) id: number) {
-    return this.productService.remove(id);
-  }
+  
+  @ResolveField(()=>ProductTranslation, {nullable:true})
+  async getTranslation(
+    @Parent() product : Product,
+    @CurrentUser('lang') lang: languagesEnum
+  ){
+    return await this.productService.getProductsTranslationByUserLang(lang, product)
+  } 
 }

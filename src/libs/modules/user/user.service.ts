@@ -29,9 +29,7 @@ export class UserService {
       loadEagerRelations: true,
     });
     if (!user) throw new ForbiddenException('user not found');
-    let filteruser = user.translations.filter(
-      (l) => l.LanguageCode === lang,
-    );
+    let filteruser = user.translations.filter((l) => l.LanguageCode === lang);
     if (!filteruser || filteruser.length === 0)
       filteruser = user.translations.filter(
         (l) => l.LanguageCode === languagesEnum.EN,
@@ -84,8 +82,10 @@ export class UserService {
     });
   }
 
-  changeUserLang(user: User, input: changeLanguageInput) {
-    user.lang = input.lang;
-    return this.userRepo.save(user);
+  async changeUserLang(user: User, input: changeLanguageInput) {
+    await this.userRepo.update({id:user.id}, {
+      lang: input.lang,
+    });
+    return 'lang updated successfull'
   }
 }

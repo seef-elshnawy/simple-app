@@ -1,24 +1,38 @@
-import { Field, ObjectType } from "@nestjs/graphql";
-import { Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { User } from "../../user/entities/user.entity";
-import { Product } from "./product.entity";
-
+import { Field, ObjectType } from '@nestjs/graphql';
+import {
+  Column,
+  Entity,
+  Index,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { User } from '../../user/entities/user.entity';
+import { Product } from './product.entity';
+import { languagesEnum } from '@src/libs/Application/lang/lang.enum';
 
 @ObjectType()
 @Entity()
-export class ProductTranslation{
+export class ProductTranslation {
   @PrimaryGeneratedColumn()
-  id: number
+  id: number;
+  @Field({nullable:true})
   @Column()
-  ProductName: string
+  ProductName: string;
+  @Field({nullable:true})
   @Column()
-  description: string
+  description: string;
+  @Field({nullable:true})
   @Column()
-  instructions: string
+  instructions: string;
 
   @Index()
-  @ManyToOne(type=>Product, (base)=> base.translation, {
-    onDelete: "CASCADE"
+  @ManyToOne((type) => Product, (base) => base.translation, {
+    onDelete: 'CASCADE',
+    onUpdate: "CASCADE"
   })
-  base: Product
+  base: Product;
+
+  @Column({ default: languagesEnum.EN })
+  @Field()
+  lang: languagesEnum;
 }

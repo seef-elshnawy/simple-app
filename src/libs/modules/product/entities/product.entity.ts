@@ -1,5 +1,5 @@
 import { ObjectType, Field } from '@nestjs/graphql';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { ProductTranslation } from './translationProduct.entity';
 
@@ -8,19 +8,19 @@ import { ProductTranslation } from './translationProduct.entity';
 export class Product {
   @PrimaryGeneratedColumn()
   Id: number;
-
-  @Field()
+  
+  @Field({nullable:true})
   ProductName: string
 
-  @Field()
+  @Field({nullable:true})
   description: string
 
-  @Field()
+  @Field({nullable:true})
   instructions: string
 
   @Field()
   @Column()
-  price: number
+  price: string
 
   @Field()
   @Column()

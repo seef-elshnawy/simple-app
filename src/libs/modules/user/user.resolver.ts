@@ -59,7 +59,7 @@ export class UserResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Mutation(() => User)
+  @Mutation(() => String)
   changeUserLang(
     @CurrentUser() user: User,
     @Args('input') input: changeLanguageInput,

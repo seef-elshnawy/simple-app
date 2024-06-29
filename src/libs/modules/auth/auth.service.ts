@@ -12,6 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Sessions } from './entities/auth.entity';
 import { UserTranslation } from '../user/entities/translationUser.entity';
+import { log } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -108,12 +109,15 @@ export class AuthService {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
     });
     const NewSessionCode = this.helper.generateSessionCode();
+    const session = await this.sessionsRepo.findOne({ where: { sessionCode } });
+    if (!session) throw new ForbiddenException('UnAuthorized');
+    console.log(sessionCode, 'SessionCode')
     console.log(NewSessionCode, 'NewSessionCode')
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
           id,
-          NewSessionCode,
+          sessionCode:NewSessionCode,
         },
         {
           secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
@@ -123,7 +127,7 @@ export class AuthService {
       this.jwtService.signAsync(
         {
           id,
-          NewSessionCode,
+          sessionCode: NewSessionCode,
         },
         {
           secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
@@ -131,8 +135,6 @@ export class AuthService {
         },
       ),
     ]);
-    const session = await this.sessionsRepo.findOne({ where: { sessionCode } });
-    if (!session) throw new ForbiddenException('UnAuthorized');
     session.sessionCode = NewSessionCode;
     await this.sessionsRepo.save(session);
     return {

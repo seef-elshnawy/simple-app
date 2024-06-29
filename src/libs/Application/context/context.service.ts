@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Sessions } from '@src/libs/modules/auth/entities/auth.entity';
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { AuthService } from '@src/libs/modules/auth/auth.service';
 import { log } from 'console';
 
@@ -23,6 +23,7 @@ export class ContextService implements IContextInterface {
   ) {}
   async getRequestFromReqHeaders(req: Request, res: Response): Promise<User> {
     try {
+      if(!this.getAuth(req)) return null
       const { accessToken, refreshToken } = this.getAuth(req);
 
       if (!accessToken || !refreshToken) return null;
@@ -52,6 +53,8 @@ export class ContextService implements IContextInterface {
         if (req.headers.refreshtoken) {
           return await this.getReqFromHeaderIfAccessIsInvalid(req, res);
         }
+      }else{
+        console.log(err)
       }
       return null;
     }
@@ -93,6 +96,7 @@ export class ContextService implements IContextInterface {
         },
       },
     });
+    console.log(sessionCode)
     if (!user) return null;
     res.appendHeader('accessToken', accessToken);
     res.appendHeader('refreshToken', newRefreshToken)
