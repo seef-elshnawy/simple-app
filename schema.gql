@@ -57,7 +57,7 @@ type Mutation {
   translateUserFields(fields: UserTranslationInput!): UserTranslation!
   removeUser(id: Int!): String!
   changeUserLang(input: changeLanguageInput!): String!
-  createProduct(createProductInput: CreateProductInput!): Product!
+  createProduct(createProductInput: CreateProductInput!, createProductTranslationInput: CreateProductTranslationInput!): Product!
   updateProduct(updateProductInput: UpdateProductInput!, updateProductTranslationInput: UpdateProductTranslation!): String!
   removeProduct(id: Float!): String!
 }
@@ -112,6 +112,9 @@ input changeLanguageInput {
 input CreateProductInput {
   price: String!
   amount: Float!
+}
+
+input CreateProductTranslationInput {
   ProductName: String!
   description: String!
   instructions: String!
@@ -120,9 +123,6 @@ input CreateProductInput {
 input UpdateProductInput {
   price: String
   amount: Float
-  ProductName: String
-  description: String
-  instructions: String
   Id: Float!
 }
 

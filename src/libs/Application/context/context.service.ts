@@ -72,7 +72,7 @@ export class ContextService implements IContextInterface {
         auth = <string>request.headers.Authorization;
       if (request.headers.authorization) auth = request.headers.authorization;
       const accessToken = auth.split(' ')[1];
-      const refreshToken = (<string>request.headers.refreshtoken).split(' ')[1];
+      const refreshToken = <string>request.headers.refreshtoken;
       return {
         accessToken,
         refreshToken,
@@ -85,7 +85,7 @@ export class ContextService implements IContextInterface {
     const { refreshtoken } = req.headers;
     console.log('run', new Date());
     const { accessToken, newRefreshToken, id, sessionCode } = await this.authService.updateToken(
-      (<string>refreshtoken).split(' ')[1],
+      <string>refreshtoken,
     );
     if (!accessToken) return null;
     const user = await this.userRepo.findOne({

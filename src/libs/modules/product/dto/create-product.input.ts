@@ -4,7 +4,6 @@ import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
 @InputType()
 export class CreateProductInput {
-
   @IsString()
   @IsNotEmpty()
   @Field(() => String)
@@ -15,28 +14,13 @@ export class CreateProductInput {
   @Field(() => Number)
   amount: number;
 
-  @IsString()
-  @IsNotEmpty()
-  @Field()
-  ProductName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @Field()
-  description: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @Field()
-  instructions: string;
-  
   @IsEnum(languagesEnum)
   @IsNotEmpty()
-  lang: languagesEnum
+  lang: languagesEnum;
 }
 
 @InputType()
-export class CreateProductTranslation {
+export class CreateProductTranslationInput {
   @IsString()
   @IsNotEmpty()
   @Field()

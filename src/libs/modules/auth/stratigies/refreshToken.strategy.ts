@@ -19,7 +19,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
 
   validate(@Context() ctx: ExecutionContext, payload: any) {
     const req = GqlExecutionContext.create(ctx).getContext();
-    const refreshToken = req.get('refreshToken').replace('Bearer', '').trim();
+    const refreshToken = req.get('refreshToken').trim();
     return { ...payload, refreshToken };
   }
 }

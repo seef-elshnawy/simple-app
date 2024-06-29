@@ -19,10 +19,10 @@ export class ProductTranslation {
   @Column()
   ProductName: string;
   @Field({nullable:true})
-  @Column()
+  @Column({nullable:true})
   description: string;
   @Field({nullable:true})
-  @Column()
+  @Column({nullable:true})
   instructions: string;
 
   @Index()

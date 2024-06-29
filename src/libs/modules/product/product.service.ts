@@ -1,6 +1,12 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { CreateProductInput } from './dto/create-product.input';
-import { UpdateProductInput, UpdateProductTranslation } from './dto/update-product.input';
+import {
+  CreateProductInput,
+  CreateProductTranslationInput,
+} from './dto/create-product.input';
+import {
+  UpdateProductInput,
+  UpdateProductTranslation,
+} from './dto/update-product.input';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
@@ -16,13 +22,14 @@ export class ProductService {
     private productTranslationRepo: Repository<ProductTranslation>,
   ) {}
 
-  async CreateProduct(createProductInput: CreateProductInput, userId: number) {
-    const productTranslation = this.productTranslationRepo.create({
-      ProductName: createProductInput.ProductName,
-      description: createProductInput.description,
-      instructions: createProductInput.instructions,
-      lang: createProductInput.lang,
-    });
+  async CreateProduct(
+    createProductInput: CreateProductInput,
+    createProductTranslation: CreateProductTranslationInput,
+    userId: number,
+  ) {
+    const productTranslation = this.productTranslationRepo.create(
+      createProductTranslation,
+    );
     await this.productTranslationRepo.save(productTranslation);
     const product = this.productRepo.create({
       ...createProductInput,
@@ -47,8 +54,8 @@ export class ProductService {
     return productTranslations;
   }
 
-  async findAllProducts() {
-    const products = await this.productRepo.find();
+  findAllProducts() {
+    const products = this.productRepo.find();
     return products;
   }
 
@@ -70,20 +77,23 @@ export class ProductService {
     const productTranslation = await this.productTranslationRepo.findOne({
       where: { base: product, lang: updateProductTranslationInput.lang },
     });
-    if(!productTranslation || !product) throw new ForbiddenException('product not found')
-    await this.productRepo.update(
-      { Id },
+    if (!product) throw new ForbiddenException('product not found');
+    if (!productTranslation) {
+      await this.productTranslationRepo.save({...updateProductTranslationInput, base:product});
+      await this.productRepo.update({ Id }, updateProductInput);
+      return 'product update successful';
+    }
+    await this.productRepo.update({ Id }, updateProductInput);
+    await this.productTranslationRepo.update(
+      { id: productTranslation.id },
       {
-        ...updateProductInput,
+        ...updateProductTranslationInput,
       },
     );
-    await this.productTranslationRepo.update({id: productTranslation.id},{
-      ...updateProductTranslationInput
-    })
     return 'product update successful';
   }
   removeProduct(id: number) {
-    this.productRepo.delete({Id:id})
-    return "product deleted successfull"
+    this.productRepo.delete({ Id: id });
+    return 'product deleted successfull';
   }
 }
